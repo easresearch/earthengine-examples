@@ -1,0 +1,40 @@
+// How to export Palmer Drought Severity Index (PDSI) using Google Earth Engine
+//import TerraClimate dataset
+var terra = ee.ImageCollection("IDAHO_EPSCOR/TERRACLIMATE").select("pdsi");
+//provide input shapefile (asset)
+var dist = ee.FeatureCollection("users/<username>/<asset>");
+
+//select desired year, month and day
+var year = 2021;
+var startDate = ee.Date.fromYMD(year, 6, 1);
+var endDate = ee.Date.fromYMD(year, 10, 1);
+
+//apply filter
+var filtered = terra.filter(ee.Filter.date(startDate, endDate));
+
+// Scaling by multiplying 0.01 
+var pdsi_mean = filtered.reduce(ee.Reducer.mean()).multiply(0.01);
+print(pdsi_mean);
+
+// clip india boundary and display
+var pdsi_clipped = pdsi_mean.clip(dist);
+Map.addLayer(pdsi_clipped, imageVisParam, 'District level PDSI');
+
+// calculate average pdsi for each unit (.reduceRegions function works for multi-polygon)
+var meanPdsi = pdsi_clipped.reduceRegions({
+  collection: dist,
+  reducer: ee.Reducer.mean(),
+  scale: 4638.3});
+  
+// print to verify  
+print(meanPdsi);
+
+// export data district level pdsi in csv format
+Export.table.toDrive({
+  collection: meanPdsi,
+  description: 'pdsi_2021',
+  folder: 'EarthEngine', // folder name in Google Drive
+  fileNamePrefix: 'dist_pdsi_mean_2021', // file name
+  selectors: ['district','state','dist_code', 'mean'], // select desired variables
+  fileFormat: 'CSV'
+});
