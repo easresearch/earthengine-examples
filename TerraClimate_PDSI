@@ -1,3 +1,8 @@
+//*********************************************
+// Author: Nabin Pradhan
+// Code: extract pdsi for a single year
+//*********************************************
+
 // How to export Palmer Drought Severity Index (PDSI) using Google Earth Engine
 //import TerraClimate dataset
 var terra = ee.ImageCollection("IDAHO_EPSCOR/TERRACLIMATE").select("pdsi");
