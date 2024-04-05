@@ -1,0 +1,48 @@
+//*********************************************
+// Author: Nabin Pradhan
+// Code: extract pdsi for multi-years
+//*********************************************
+
+// terraclimate 
+var terra = ee.ImageCollection("IDAHO_EPSCOR/TERRACLIMATE").select("pdsi");
+
+
+// district-level shapefile (provide link to the assets)
+var dist = ee.FeatureCollection("users/assets/dist_11");
+
+// Define the year range
+var startYear = 2012;
+var endYear = 2021;
+
+// Loop over the years
+for (var year = startYear; year <= endYear; year++) {
+  // Select date range (June to September)
+  var startDate = ee.Date.fromYMD(year, 6, 1);
+  var endDate = ee.Date.fromYMD(year, 10, 1);
+  
+  // Filter the image collection by date range
+  var filtered = terra.filter(ee.Filter.date(startDate, endDate));
+
+  // Calculate average PDSI and scale the image
+  var pdsi_mean = filtered.reduce(ee.Reducer.mean()).multiply(0.01);
+
+  // Clip to district boundaries
+  var pdsi_clipped = pdsi_mean.clip(dist);
+
+  // Reduce regions to get mean PDSI for each district
+  var meanPdsi = pdsi_clipped.reduceRegions({
+    collection: dist,
+    reducer: ee.Reducer.mean(),
+    scale: 4638.3
+  });
+  
+  // Export data district level PDSI in CSV format from 2012 to 2022
+  Export.table.toDrive({
+    collection: meanPdsi,
+    description: 'pdsi_' + year,
+    folder: 'EarthEngine',
+    fileNamePrefix: 'dist_kharif_pdsi_mean_2012_2022' + year,
+    selectors: ['DISTRICT','ST_NM','censuscode', 'mean'],
+    fileFormat: 'CSV'
+  });
+}
