@@ -41,7 +41,7 @@ for (var year = startYear; year <= endYear; year++) {
     collection: meanPdsi,
     description: 'pdsi_' + year,
     folder: 'EarthEngine',
-    fileNamePrefix: 'dist_kharif_pdsi_mean_2012_2022' + year,
+    fileNamePrefix: 'dist_kharif_pdsi_mean_' + year,
     selectors: ['DISTRICT','ST_NM','censuscode', 'mean'],
     fileFormat: 'CSV'
   });
